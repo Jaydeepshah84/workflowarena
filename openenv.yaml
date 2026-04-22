@@ -1,0 +1,86 @@
+name: workflow-arena
+version: "1.0.0"
+description: >
+  WorkFlow Arena — Multi-App Enterprise Workflow RL Environment. Trains AI agents
+  to orchestrate real business processes across Gmail, Slack, Jira, HRIS, CRM,
+  deployment, and finance systems. All rewards verifiable via actual API responses.
+  Theme 3.1 + Scaler AI Labs Sub-theme.
+
+author: Jaydeep Shah
+tags:
+  - openenv
+  - enterprise-workflow
+  - multi-app
+  - rl-environment
+  - scaler-ai-labs
+
+interface:
+  action:
+    model: models.WorkFlowAction
+    fields:
+      message:
+        type: string
+        description: JSON with 'calls' list of API calls
+  observation:
+    model: models.WorkFlowObservation
+    fields:
+      content:
+        type: string
+      done:
+        type: boolean
+  state:
+    model: models.WorkFlowState
+    fields:
+      episode_id:
+        type: string
+      step_count:
+        type: integer
+      task_name:
+        type: string
+      completed_actions:
+        type: integer
+      current_score:
+        type: float
+
+tasks:
+  - name: employee_onboarding
+    description: Onboard new engineering hire across 5 apps
+    difficulty: easy
+    max_steps: 12
+    num_required_actions: 6
+
+  - name: customer_support
+    description: Triage enterprise customer issue across CRM/Jira/Slack/Gmail
+    difficulty: medium
+    max_steps: 12
+    num_required_actions: 5
+
+  - name: expense_approval
+    description: Process expense submissions with policy-based routing
+    difficulty: medium
+    max_steps: 10
+    num_required_actions: 5
+
+  - name: sprint_release
+    description: Execute production release with deployment orchestration
+    difficulty: hard
+    max_steps: 15
+    num_required_actions: 7
+
+  - name: incident_response
+    description: P0 incident response with rollback, communication, tracking
+    difficulty: expert
+    max_steps: 15
+    num_required_actions: 7
+
+endpoints:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+  health: GET /health
+  websocket: /ws
+
+deployment:
+  port: 7860
+  dockerfile: Dockerfile
+  server_module: server.app:app

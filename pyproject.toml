@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "workflow-arena"
+version = "1.0.0"
+description = "WorkFlow Arena — Multi-App Enterprise Workflow RL Environment"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [{name = "Jaydeep Shah", email = "jaydeepshah2019@gmail.com"}]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.0.0",
+    "httpx>=0.25.0",
+    "openai>=1.0.0",
+    "openenv-core>=0.2.0",
+    "gradio>=4.0.0",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[project.urls]
+Homepage = "https://huggingface.co/spaces/jaydeepshah2025/workflow-arena"
