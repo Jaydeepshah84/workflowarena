@@ -238,6 +238,18 @@ A: Sessions live in an in-process dict. Multiple workers = session loss on any c
 **Q: Why clamp rewards at the boundaries (0, 1)?**
 A: Organizer requirement. Rewards must be strictly in the open interval (0, 1), never exactly 0.0 or 1.0. Intermediate values pass through unchanged.
 
+**Q: Why a constrained action space? Isn't that limiting?**
+A: It's a deliberate tradeoff for verifiability. Free-form action spaces require LLM-as-judge to decide "did the agent do the right thing?" — which the hackathon explicitly discourages. By defining `required_actions` upfront, we can verify every reward with integer/string checks instead of subjective evaluation. The constraint IS what makes the rewards trustworthy.
+
+**Q: Where's the planning in this environment?**
+A: The **priority order reward** (15%) directly tests planning. An agent that completes required action #3 before completing #1 and #2 doesn't get the priority bonus. Over multiple steps, the agent must plan sequence correctly to maximize reward. This is tested automatically — see `_match_required_action` in [server/environment.py](server/environment.py).
+
+**Q: Why not implement recovery (retry on failed calls) or dynamic task generation?**
+A: Scope discipline. Recovery behavior would test the **agent's** intelligence; our env is about testing **workflow orchestration** at the environment level. Dynamic task generation belongs in Theme 4 (Self-Improvement), not Theme 3.1 (Professional Tasks). Adding either would drift us into a weaker fit for our chosen theme.
+
+**Q: Why only 5 workflows? Why not 50?**
+A: Depth over breadth. Each workflow has 5-7 required actions across 3-5 apps with business rule enforcement — that's 30 total required actions. Adding 45 more workflows would add quantity without depth. The 5 workflows span easy (onboarding) to expert (P0 incident) — enough range to evaluate a trained agent meaningfully.
+
 ---
 
 ## 🚀 Quick Start
