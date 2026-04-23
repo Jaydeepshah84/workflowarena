@@ -86,12 +86,25 @@ class WorkFlowEnvironment(_OpenEnvBase):
         }
 
     def step(self, message: str) -> dict:
+        """Execute one agent step: parse API calls, run against mock apps, grade.
+
+        The reward is fully deterministic — no LLM judge, no subjective scoring.
+        Every reward component traces to either:
+          - a boolean result["success"] from a mock app
+          - a non-empty string check on reasoning
+          - an integer comparison on action sequence position
+
+        Boundaries clamped: exactly 0.0 -> 0.01, exactly 1.0 -> 0.99, so the reward
+        range stays in the open interval (0, 1) per the OpenEnv hackathon contract.
+        Intermediate values pass through unchanged.
+        """
         self.step_count += 1
 
         api_calls = self._parse_calls(message)
         step_reward, feedback, execution_results = self._execute_and_grade(api_calls)
 
-        # Ensure reward in (0, 1)
+        # Boundary clamp — keep the reward strictly in the open interval (0, 1),
+        # per hackathon organizer requirement. Intermediate values unchanged.
         if step_reward <= 0.0:
             step_reward = 0.01
         if step_reward >= 1.0:
@@ -236,7 +249,21 @@ class WorkFlowEnvironment(_OpenEnvBase):
         return {"success": False, "error": f"Unknown app.method: {app_name}.{method}"}
 
     def _match_required_action(self, call: APICall, result: Dict) -> Optional[str]:
-        """Check if this API call matches any pending required action."""
+        """Return the ID of the required action this call satisfies, or None.
+
+        Matching rules — all must pass:
+          1. result["success"] is True (mock app accepted it)
+          2. action not already in completed_actions (no double-counting)
+          3. action["app"] == call.app (exact app match)
+          4. action["method"] == call.method OR their _-stripped forms match (method alias)
+          5. Every key in action["params"] matches call.params:
+              - suffix "_contains" → substring check on the unsuffixed key
+              - otherwise → case-insensitive string equality
+
+        Returns the first matching required action's ID. This is how the env
+        distinguishes "API call succeeded" (generic) from "completed a required
+        workflow action" (specific) — critical for verifiable rewards.
+        """
         if not result.get("success"):
             return None
 

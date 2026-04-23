@@ -208,6 +208,38 @@ Confirms rewards are verifiable — a correct agent reliably hits ~0.95, proving
 
 ---
 
+## 🧭 Design Decisions (FAQ)
+
+These are the tradeoffs we made and why. Preempting the likely "why did you..." questions.
+
+**Q: Why is the reward function only 3 components? Isn't that simplistic?**
+A: Each component is **independently verifiable** — API success (bool), reasoning present (string check), priority order (integer comparison). Adding more components was possible but would introduce subjectivity. The hackathon explicitly prefers "crisp verification over tasks that only look good to a human." Simpler, more verifiable beats complex and fuzzy.
+
+**Q: Why no penalty for wrong actions?**
+A: Deliberate RL choice — penalties discourage exploration in sparse-reward settings. The agent gets 0 for wrong actions (no reward, no punishment). A trained agent still learns to avoid them because they don't advance progress. Penalties would collapse exploration too aggressively given the 30 required actions across 5 workflows.
+
+**Q: Why mock apps instead of real APIs?**
+A: Reproducibility. A judge should be able to `git clone`, `pip install`, and run `baseline_test.py` without setting up Gmail/Slack/Jira accounts. The mock apps implement the same interface real APIs would — swapping in Gmail's actual API is ~50 lines per app.
+
+**Q: Why aren't you using LLM-as-judge for reasoning quality?**
+A: The hackathon guide explicitly says prefer verifiable rewards. LLM judges are gameable, expensive, and subjective. Our rewards trace to lines of Python code in [server/environment.py](server/environment.py) — a judge can verify them by reading the code.
+
+**Q: Why inherit from a conditional OpenEnv base class?**
+A: The openenv-core package only publishes 0.1.0 on PyPI as of April 2026. Fresh installs might pull a version without `openenv.core.environment.Environment`. We inherit when available and fall back to a shim when not, so the env works either way. The HTTP contract is the authority per the OpenEnv spec.
+
+**Q: Why a bandit training script instead of full GRPO?**
+A: Two reasons:
+1. Reproducibility — `train_simple_agent.py` runs on CPU in ~2 minutes. Judges can reproduce without a GPU.
+2. Evidence — the committed plots come from a real training loop, not a claim. Full LLM GRPO training happens in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) on Colab.
+
+**Q: Why single-worker uvicorn?**
+A: Sessions live in an in-process dict. Multiple workers = session loss on any cross-worker request. Production would use Redis; for a hackathon demo env, single-worker is the correct tradeoff.
+
+**Q: Why clamp rewards at the boundaries (0, 1)?**
+A: Organizer requirement. Rewards must be strictly in the open interval (0, 1), never exactly 0.0 or 1.0. Intermediate values pass through unchanged.
+
+---
+
 ## 🚀 Quick Start
 
 ### Try It Online (Easiest)
@@ -326,8 +358,10 @@ workflowarena/
 - 🏢 **Live Demo**: https://huggingface.co/spaces/jaydeepshah2025/workflow-arena
 - 💻 **GitHub**: https://github.com/Jaydeepshah84/workflowarena
 - 📓 **Training Notebook**: [Open in Colab](https://colab.research.google.com/github/Jaydeepshah84/workflowarena/blob/main/train_workflow_arena.ipynb)
+- 🧭 **Code Walkthrough** (5-min tour for reviewers): [CODE_WALKTHROUGH.md](CODE_WALKTHROUGH.md)
 - 📝 **Blog**: [BLOG.md](BLOG.md)
 - 🎤 **3-Minute Pitch**: [PITCH.md](PITCH.md)
+- 🎬 **Demo Recording Script**: [DEMO_RECORDING_SCRIPT.md](DEMO_RECORDING_SCRIPT.md)
 
 **What to check:**
 1. **Innovation**: Verifiable API-based rewards — no LLM judges, no subjective grading
