@@ -3,6 +3,10 @@
 The agent orchestrates multi-app enterprise workflows. Every API call
 is executed against mock apps and REWARDS ARE VERIFIABLE through
 actual API response success.
+
+OpenEnv contract: implements reset() -> observation, step(action) -> (obs, reward, done, info),
+state() -> current state. Server (FastAPI) exposes these as /reset, /step, /state per the
+OpenEnv HTTP spec. The client (client.py) is a thin wrapper; no server logic leaks into it.
 """
 
 import json
@@ -17,9 +21,21 @@ from models import APICall
 from workflows import WORKFLOWS
 from mock_apps import EnterpriseApps
 
+try:
+    from openenv.core.environment import Environment as _OpenEnvBase
+except Exception:
+    class _OpenEnvBase:
+        """Fallback base class when openenv-core is not on the current path."""
+        pass
 
-class WorkFlowEnvironment:
-    """WorkFlow Arena — Multi-app enterprise workflow environment."""
+
+class WorkFlowEnvironment(_OpenEnvBase):
+    """WorkFlow Arena — Multi-app enterprise workflow environment.
+
+    Inherits from openenv.core.environment.Environment when available.
+    Contract: reset() / step(action) / state() — the three primitives the
+    OpenEnv spec defines. Exposed over HTTP via server/app.py.
+    """
 
     def __init__(self):
         self.task_name: str = ""

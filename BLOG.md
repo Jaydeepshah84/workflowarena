@@ -68,29 +68,30 @@ Each required action earns points across dimensions:
 
 This encourages agents to think before acting AND execute in the right business sequence.
 
-## Training Results
+## Training Results (real numbers, committed plots)
 
-We trained Qwen3-1.7B via GRPO (TRL + Unsloth) on 3 workflows for 50 episodes on Colab's free T4 GPU.
+We ran two training tracks:
 
-**Results**:
+**Track 1 — Local bandit agent** (`train_simple_agent.py`, 80 episodes per workflow, no GPU). Produces the committed PNGs in the repo.
 
-```
-Baseline (untrained):
-  employee_onboarding: 0.15 reward
-  expense_approval:    0.10 reward
-  customer_support:    0.08 reward
+| Workflow | Random Baseline | Trained Agent | Improvement |
+|----------|----------------:|--------------:|------------:|
+| Employee Onboarding | 0.267 | **0.617** | **2.3×** |
+| Expense Approval | 0.389 | **0.740** | **1.9×** |
+| Customer Support | 0.389 | **0.680** | **1.7×** |
 
-After 50 episodes of GRPO training:
-  employee_onboarding: 0.72 reward (4.8x improvement)
-  expense_approval:    0.65 reward (6.5x improvement)
-  customer_support:    0.48 reward (6.0x improvement)
-```
+![Reward Curve](reward_curve.png)
 
-The agent learned to:
-1. Execute API calls in correct business priority
-2. Use proper enum values (e.g., `"dept": "engineering"` not `"Eng"`)
-3. Provide reasoning for each action
-4. Match parameters to workflow context
+![Random vs Trained](comparison_chart.png)
+
+**Track 2 — LLM rollout** (`train_workflow_arena.ipynb`, Qwen3-1.7B on Colab free T4). Produces `llm_rollout_curve.png` and the per-workflow reward bars.
+
+The bandit agent learned to:
+1. Pick action templates that match the required workflow steps
+2. Prefer calls that succeed under enum/policy validation
+3. Suppress distractor actions that don't score
+
+The LLM agent (when trained with GRPO) goes further — it generates the parameters from context instead of picking from a template pool.
 
 ## Tech Stack
 
@@ -103,8 +104,9 @@ The agent learned to:
 ## Links
 
 - 🏢 **Live Environment**: https://huggingface.co/spaces/jaydeepshah2025/workflow-arena
-- 💻 **GitHub**: https://github.com/Jaydeepshah84/metascaler
+- 💻 **GitHub**: https://github.com/Jaydeepshah84/workflowarena
 - 📓 **Training Notebook**: `train_workflow_arena.ipynb`
+- 🏋️ **Local Training Script**: `train_simple_agent.py`
 
 ## What's Next
 

@@ -152,9 +152,37 @@ Rewards clamped to `(0.01, 0.99)` — always strictly between 0 and 1.
 
 ---
 
-## 📊 Baseline Results
+## 📊 Training Evidence — Real Runs, Real Plots
 
-Perfect agent baseline (scripted correct responses):
+### Reward curve (80 episodes per workflow)
+
+![Reward Curve](reward_curve.png)
+
+### TD loss curve
+
+![Loss Curve](loss_curve.png)
+
+### Random baseline vs trained agent
+
+![Random vs Trained](comparison_chart.png)
+
+### Quantitative comparison (from `training_results.json`)
+
+| Workflow | Random Baseline | Trained Agent | Improvement |
+|----------|----------------:|--------------:|------------:|
+| Employee Onboarding | 0.267 | **0.617** | **2.3×** |
+| Expense Approval | 0.389 | **0.740** | **1.9×** |
+| Customer Support | 0.389 | **0.680** | **1.7×** |
+
+Reproduce locally:
+
+```bash
+python train_simple_agent.py   # regenerates all 3 PNGs + training_results.json
+```
+
+The full LLM training (Qwen3-1.7B + TRL GRPOTrainer + Unsloth) runs in `train_workflow_arena.ipynb` on Colab — outputs `llm_rollout_curve.png`.
+
+### Perfect agent baseline (sanity check — scripted correct responses)
 
 | Workflow | Score |
 |----------|-------|
@@ -165,13 +193,7 @@ Perfect agent baseline (scripted correct responses):
 | Incident Response | **0.793** |
 | **Average** | **0.951** |
 
-Trained agent results (Qwen3-1.7B, 50 episodes of GRPO):
-
-| Workflow | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| Employee Onboarding | 0.15 | 0.72 | **4.8×** |
-| Expense Approval | 0.10 | 0.65 | **6.5×** |
-| Customer Support | 0.08 | 0.48 | **6.0×** |
+Confirms rewards are verifiable — a correct agent reliably hits ~0.95, proving the grader works.
 
 ---
 
@@ -204,6 +226,14 @@ docker run -p 7860:7860 workflow-arena
 ```bash
 python baseline_test.py
 ```
+
+### Reproduce the training plots (2 min, no GPU)
+
+```bash
+python train_simple_agent.py
+```
+
+Produces `reward_curve.png`, `loss_curve.png`, `comparison_chart.png`, `training_results.json` from a real bandit training run against the live environment code.
 
 ### Train with GRPO + Unsloth
 
@@ -250,7 +280,12 @@ workflowarena/
 ├── client.py                     HTTP client
 ├── inference.py                  Baseline inference with [START/STEP/END] logs
 ├── baseline_test.py              Validates env with scripted perfect agent
+├── train_simple_agent.py         Local bandit training → reward/loss PNGs
 ├── train_workflow_arena.ipynb    GRPO training notebook for Colab
+├── reward_curve.png              Real training reward curve (committed)
+├── loss_curve.png                Real TD loss curve (committed)
+├── comparison_chart.png          Random vs trained comparison (committed)
+├── training_results.json         Raw per-episode numbers
 ├── openenv.yaml                  OpenEnv metadata
 ├── pyproject.toml                Package definition
 ├── Dockerfile                    Root Dockerfile

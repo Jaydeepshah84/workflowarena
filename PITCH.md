@@ -61,16 +61,17 @@
 
 *[Show the reward curve chart from the notebook]*
 
-> **"We trained Qwen3-1.7B with TRL's GRPOTrainer and Unsloth for just 50 episodes
-> on a free Colab GPU.**
+> **"We ran a real training loop against the environment and committed the plots to the repo.**
 >
-> **Before training:
-> - Employee onboarding: 0.15 reward
-> - Expense approval: 0.10 reward**
+> **Random baseline:
+> - Employee onboarding: 0.267 reward
+> - Expense approval: 0.389 reward
+> - Customer support: 0.389 reward**
 >
-> **After 50 episodes:
-> - Employee onboarding: 0.72 reward — nearly 5x improvement
-> - Expense approval: 0.65 reward — over 6x improvement**
+> **After 80 episodes of bandit training:
+> - Employee onboarding: 0.617 reward — 2.3x improvement
+> - Expense approval: 0.740 reward — 1.9x improvement
+> - Customer support: 0.680 reward — 1.7x improvement**
 >
 > **The agent learned to respect business rules: correct department enums,
 > proper priority order, sequential API dependencies.**
@@ -103,10 +104,12 @@
 - **5** workflows (easy → expert)
 - **30** total required actions
 - **100%** verifiable rewards (no LLM judges)
-- **50** episodes trained
-- **5×** reward improvement on onboarding
-- **6×** reward improvement on expenses
-- **~40 min** training time on free Colab T4
+- **80** episodes trained (bandit) + Colab GRPO rollouts (Qwen3-1.7B)
+- **2.3×** reward improvement on onboarding (0.267 → 0.617)
+- **1.9×** reward improvement on expenses (0.389 → 0.740)
+- **1.7×** reward improvement on customer support (0.389 → 0.680)
+- **~2 min** for local bandit training (CPU); **~15–20 min** for Colab T4 LLM
+- Plots committed: `reward_curve.png`, `loss_curve.png`, `comparison_chart.png`
 
 ## ❓ Expected Q&A (2 minutes)
 
