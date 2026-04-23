@@ -139,16 +139,18 @@ All apps enforce **real business rules**:
 
 ---
 
-## 🎯 Reward Function (5-Component)
+## 🎯 Reward Function (fully deterministic, no LLM judges)
 
-| Component | Weight | What it rewards |
-|-----------|--------|-----------------|
-| Correct API call | **70%** | API succeeds AND matches a required action |
-| Reasoning quality | **15%** | Agent explains WHY it made the call |
-| Priority order | **15%** | Completing actions in correct business sequence |
-| Failed API call | 0% | No reward (but no penalty — encourages exploration) |
+Per required action completed, the agent earns points across three components. **All three are integer/string checks — no subjective grading.**
 
-Rewards clamped to `(0.01, 0.99)` — always strictly between 0 and 1.
+| Component | Weight | Exact grader logic |
+|-----------|--------|--------------------|
+| Correct API call | **70%** | `result["success"] is True AND call matches a required action's app+method+params` |
+| Reasoning provided | **15%** | `call.reasoning.strip() != ""` (non-empty string check) |
+| Priority order | **15%** | `len(completed_actions) == expected_priority` (integer comparison — action completed in correct sequence position) |
+| Failed API call | 0% | No reward, no penalty — encourages exploration |
+
+Every component traces to a line of code in `server/environment.py`. No LLM judge, no regex heuristic, no subjective grading. Rewards clamped strictly to `(0.01, 0.99)`.
 
 ---
 
