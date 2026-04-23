@@ -22,6 +22,37 @@ tags:
 
 ---
 
+## ⚡ Try it in 30 seconds (no install)
+
+1. Open the live Space: **[jaydeepshah2025-workflow-arena.hf.space](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena)**
+2. Pick a workflow from the dropdown (`employee_onboarding` is the easy starting point)
+3. Click **Sample API Calls** → **Execute Step**
+4. Watch the Score, Required Actions, and API Success Rate update in real time
+
+That's the environment working. Everything below is how and why.
+
+---
+
+## 📊 Proof It Trains (real run, committed plots)
+
+80-episode bandit training loop against the live environment produced these curves:
+
+![Reward Curve](reward_curve.png)
+
+![Random vs Trained Agent](comparison_chart.png)
+
+| Workflow | Random Baseline | Trained Agent | Improvement |
+|----------|----------------:|--------------:|------------:|
+| Employee Onboarding | 0.267 | **0.617** | **2.3×** |
+| Expense Approval | 0.389 | **0.740** | **1.9×** |
+| Customer Support | 0.389 | **0.680** | **1.7×** |
+
+Reproduce locally (~2 min, no GPU): `python3 train_simple_agent.py`
+
+Full training artifacts: [reward_curve.png](reward_curve.png) · [loss_curve.png](loss_curve.png) · [comparison_chart.png](comparison_chart.png) · [training_results.json](training_results.json)
+
+---
+
 ## 🎯 Why This Exists
 
 Every day, enterprises run workflows that cost **billions of dollars** in human labor:
@@ -154,35 +185,13 @@ Every component traces to a line of code in `server/environment.py`. No LLM judg
 
 ---
 
-## 📊 Training Evidence — Real Runs, Real Plots
+## 📊 TD Loss Curve + Full Training Details
 
-### Reward curve (80 episodes per workflow)
-
-![Reward Curve](reward_curve.png)
-
-### TD loss curve
+See the reward and comparison plots above. Here is the TD loss decreasing across training episodes:
 
 ![Loss Curve](loss_curve.png)
 
-### Random baseline vs trained agent
-
-![Random vs Trained](comparison_chart.png)
-
-### Quantitative comparison (from `training_results.json`)
-
-| Workflow | Random Baseline | Trained Agent | Improvement |
-|----------|----------------:|--------------:|------------:|
-| Employee Onboarding | 0.267 | **0.617** | **2.3×** |
-| Expense Approval | 0.389 | **0.740** | **1.9×** |
-| Customer Support | 0.389 | **0.680** | **1.7×** |
-
-Reproduce locally:
-
-```bash
-python train_simple_agent.py   # regenerates all 3 PNGs + training_results.json
-```
-
-The full LLM training (Qwen3-1.7B + TRL GRPOTrainer + Unsloth) runs in `train_workflow_arena.ipynb` on Colab — outputs `llm_rollout_curve.png`.
+The full LLM training pipeline (Qwen3-1.7B + TRL GRPOTrainer + Unsloth) lives in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) — runs on Colab free T4, outputs `llm_rollout_curve.png`.
 
 ### Perfect agent baseline (sanity check — scripted correct responses)
 

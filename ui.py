@@ -127,7 +127,15 @@ with gr.Blocks(title="WorkFlow Arena", theme=gr.themes.Soft()) as demo:
         "# 🏢 WorkFlow Arena — Multi-App Enterprise Workflow RL Environment\n"
         "**Train AI agents to orchestrate real business workflows across Gmail, Slack, Jira, "
         "HRIS, CRM, and more. Every reward is VERIFIED via actual API responses.**\n\n"
-        "Theme 3.1 + Scaler AI Labs Sub-theme"
+        "Theme 3.1 + Scaler AI Labs Sub-theme\n\n"
+        "---\n\n"
+        "### ▶ How to try it (30 seconds)\n"
+        "**1.** Pick a workflow from the dropdown (start with `employee_onboarding`).\n"
+        "**2.** Click **🔄 Reset**.\n"
+        "**3.** Click **📋 Sample API Calls** to fill in a valid agent response.\n"
+        "**4.** Click **▶ Execute Step** — watch the Score, Required Actions, and API Success Rate update.\n\n"
+        "Every reward comes from actual mock-app state changes — no LLM judges.\n\n"
+        "---"
     )
 
     with gr.Row():
