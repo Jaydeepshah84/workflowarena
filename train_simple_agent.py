@@ -3,8 +3,9 @@
 This is a LOCAL, lightweight training run that produces REAL reward and loss
 curves from an actual learning loop — committed as PNGs in the repo.
 
-It complements the full LLM training pipeline in train_workflow_arena.ipynb
-(Qwen3-1.7B + TRL GRPOTrainer + Unsloth), which the judges can re-run on Colab.
+It complements the LLM training pipeline in train_workflow_arena.ipynb
+(Qwen3-1.7B zero-shot rollouts + TRL GRPOTrainer proof-of-life with PEFT/LoRA),
+which judges can re-run on Colab.
 
 The bandit learns which action templates to pick for each workflow. Every
 reward is the SAME verifiable reward the LLM agent sees — coming from the

@@ -7,11 +7,16 @@ actual API response success.
 OpenEnv contract: implements reset() -> observation, step(action) -> (obs, reward, done, info),
 state() -> current state. Server (FastAPI) exposes these as /reset, /step, /state per the
 OpenEnv HTTP spec. The client (client.py) is a thin wrapper; no server logic leaks into it.
+
+Reward structure uses a composable-rubric pattern (REWARD_RUBRIC below): each step reward
+is the sum of independent scoring components, every one traceable to a mock-app state
+change, a reasoning-field check, or an integer priority comparison. No LLM judges.
 """
 
 import json
 import uuid
-from typing import Dict, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import sys
 import os
@@ -21,12 +26,87 @@ from models import APICall
 from workflows import WORKFLOWS
 from mock_apps import EnterpriseApps
 
+# Try to extend OpenEnv's Environment base. The real class lives at
+# openenv_core.env_server.interfaces.Environment (ABC with typed Observation /
+# @property state) — our HTTP layer adapts dict-based IO, so we don't inherit
+# directly; instead we verify openenv-core is importable and fall back otherwise.
 try:
-    from openenv.core.environment import Environment as _OpenEnvBase
+    from openenv.core.environment import Environment as _OpenEnvBase  # type: ignore
 except Exception:
-    class _OpenEnvBase:
-        """Fallback base class when openenv-core is not on the current path."""
-        pass
+    try:
+        import openenv_core  # noqa: F401  — presence check only
+        class _OpenEnvBase:
+            """Shim base — openenv-core is installed; dict-based IO adapted by server/app.py."""
+            pass
+    except Exception:
+        class _OpenEnvBase:
+            """Fallback — openenv-core not importable (e.g., Python <3.10)."""
+            pass
+
+
+@dataclass
+class RubricContext:
+    """Inputs every rubric component sees when scoring a single API call.
+
+    post_add_completed_count is len(completed_actions) AFTER the matched_id (if any)
+    has been recorded — needed so priority checks compare against the 1-indexed
+    position the agent has just achieved.
+    """
+    call: APICall
+    result: Dict
+    matched_id: Optional[str]
+    post_add_completed_count: int
+    workflow: Dict
+    points_per_action: float
+
+
+def _rubric_action_match(ctx: RubricContext) -> float:
+    """70% of per-action budget for executing a correct required action."""
+    return ctx.points_per_action * 0.70 if ctx.matched_id else 0.0
+
+
+def _rubric_reasoning(ctx: RubricContext) -> float:
+    """15% bonus for providing a non-empty reasoning string on a matched action."""
+    if ctx.matched_id and ctx.call.reasoning.strip():
+        return ctx.points_per_action * 0.15
+    return 0.0
+
+
+def _rubric_priority_order(ctx: RubricContext) -> float:
+    """15% bonus for completing the action in the workflow's specified priority order."""
+    if not ctx.matched_id:
+        return 0.0
+    action_idx = next(
+        (i for i, a in enumerate(ctx.workflow["required_actions"]) if a["id"] == ctx.matched_id),
+        -1,
+    )
+    if action_idx < 0:
+        return 0.0
+    expected_priority = ctx.workflow["required_actions"][action_idx]["priority"]
+    if ctx.post_add_completed_count == expected_priority:
+        return ctx.points_per_action * 0.15
+    return 0.0
+
+
+def _rubric_exploration(ctx: RubricContext) -> float:
+    """Small credit for a valid API call that didn't satisfy any required action.
+
+    Rewards exploration without leaking signal that would let the agent game
+    the rubric — 5% of per-action budget is too small to dominate the match bonus.
+    """
+    if ctx.result.get("success") and not ctx.matched_id:
+        return ctx.points_per_action * 0.05
+    return 0.0
+
+
+# Composable rubric — each component scores one axis of behavior.
+# Sum of components per call = per-call reward. Ordering is display-only.
+REWARD_RUBRIC: List[Tuple[Callable[[RubricContext], float], str]] = [
+    (_rubric_action_match, "action_match"),
+    (_rubric_reasoning, "reasoning"),
+    (_rubric_priority_order, "priority_order"),
+    (_rubric_exploration, "exploration"),
+]
 
 
 class WorkFlowEnvironment(_OpenEnvBase):
@@ -300,6 +380,12 @@ class WorkFlowEnvironment(_OpenEnvBase):
         return None
 
     def _execute_and_grade(self, api_calls: List[APICall]) -> Tuple[float, str, List[Dict]]:
+        """Score a batch of API calls by running each rubric component per call.
+
+        Reward = sum over calls of (sum over rubric components of contribution).
+        Side effects: updates self.completed_actions, self.api_calls_made,
+        self.api_calls_successful.
+        """
         required_total = len(self.workflow["required_actions"])
         points_per_action = 1.0 / required_total
         step_reward = 0.0
@@ -318,37 +404,44 @@ class WorkFlowEnvironment(_OpenEnvBase):
                 "result": result,
             })
 
+            # Determine whether this call satisfied a required action — before
+            # scoring, so the rubric sees the final completion state.
+            matched_id: Optional[str] = None
             if result.get("success"):
                 self.api_calls_successful += 1
                 matched_id = self._match_required_action(call, result)
                 if matched_id:
                     self.completed_actions.add(matched_id)
-                    action_reward = points_per_action * 0.7  # 70% for correct API call
-                    # Bonus for reasoning
-                    if call.reasoning.strip():
-                        action_reward += points_per_action * 0.15
-                    # Bonus for correct priority (doing things in the right order)
-                    action_idx = next(i for i, a in enumerate(self.workflow["required_actions"]) if a["id"] == matched_id)
-                    expected_priority = self.workflow["required_actions"][action_idx]["priority"]
-                    if len(self.completed_actions) == expected_priority:  # In order!
-                        action_reward += points_per_action * 0.15
-                    step_reward += action_reward
-                    feedback_parts.append(
-                        f"  ✅ {call.app}.{call.method}: SUCCESS — completed '{matched_id}' (+{action_reward:.3f})"
-                    )
-                else:
-                    step_reward += points_per_action * 0.05  # small credit for valid call
-                    feedback_parts.append(
-                        f"  ⚠️ {call.app}.{call.method}: API success but doesn't match any required action"
-                    )
+
+            ctx = RubricContext(
+                call=call,
+                result=result,
+                matched_id=matched_id,
+                post_add_completed_count=len(self.completed_actions),
+                workflow=self.workflow,
+                points_per_action=points_per_action,
+            )
+
+            # Apply the composable rubric: each component scores one axis.
+            call_reward = 0.0
+            for component_fn, _tag in REWARD_RUBRIC:
+                call_reward += component_fn(ctx)
+            step_reward += call_reward
+
+            if matched_id:
+                feedback_parts.append(
+                    f"  ✅ {call.app}.{call.method}: SUCCESS — completed '{matched_id}' (+{call_reward:.3f})"
+                )
+            elif result.get("success"):
+                feedback_parts.append(
+                    f"  ⚠️ {call.app}.{call.method}: API success but doesn't match any required action"
+                )
             else:
-                # API call failed
                 error = result.get("error", "unknown")
                 feedback_parts.append(
                     f"  ❌ {call.app}.{call.method}: FAILED — {error}"
                 )
 
-        remaining = required_total - len(self.completed_actions)
         feedback_parts.append(
             f"\n  Progress: {len(self.completed_actions)}/{required_total} required actions. "
             f"API: {self.api_calls_successful}/{self.api_calls_made} successful."

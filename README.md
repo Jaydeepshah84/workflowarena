@@ -170,18 +170,19 @@ All apps enforce **real business rules**:
 
 ---
 
-## 🎯 Reward Function (fully deterministic, no LLM judges)
+## 🎯 Reward Function — composable rubric, no LLM judges
 
-Per required action completed, the agent earns points across three components. **All three are integer/string checks — no subjective grading.**
+Each step reward is the sum of independent **rubric components** — the same composable pattern OpenEnv's `Transform` protocol encourages. Every component is an integer/string check traceable to a single function in [server/environment.py](server/environment.py).
 
-| Component | Weight | Exact grader logic |
-|-----------|--------|--------------------|
-| Correct API call | **70%** | `result["success"] is True AND call matches a required action's app+method+params` |
-| Reasoning provided | **15%** | `call.reasoning.strip() != ""` (non-empty string check) |
-| Priority order | **15%** | `len(completed_actions) == expected_priority` (integer comparison — action completed in correct sequence position) |
-| Failed API call | 0% | No reward, no penalty — encourages exploration |
+| Rubric component (`server/environment.py`) | Weight | Exact grader logic |
+|---|--------|--------------------|
+| `_rubric_action_match` | **70%** | `result["success"] is True AND call matches a required action's app+method+params` |
+| `_rubric_reasoning` | **15%** | matched_id set AND `call.reasoning.strip() != ""` |
+| `_rubric_priority_order` | **15%** | `post_add_completed_count == expected_priority` (integer check — action completed in correct sequence position) |
+| `_rubric_exploration` | **5%** (per-action budget) | Valid API call that didn't match any required action — small credit encourages exploration without gaming |
+| Failed API call | 0% | No reward, no penalty |
 
-Every component traces to a line of code in `server/environment.py`. No LLM judge, no regex heuristic, no subjective grading. Rewards clamped strictly to `(0.01, 0.99)`.
+The full rubric is declared as a list (`REWARD_RUBRIC`) so adding or swapping a component is one line of code — composable, not monolithic. Rewards clamped strictly to `(0.01, 0.99)`.
 
 ---
 
@@ -191,7 +192,7 @@ See the reward and comparison plots above. Here is the TD loss decreasing across
 
 ![Loss Curve](loss_curve.png)
 
-The full LLM training pipeline (Qwen3-1.7B + TRL GRPOTrainer + Unsloth) lives in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) — runs on Colab free T4, outputs `llm_rollout_curve.png`.
+The LLM training pipeline in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) covers **both** (a) Qwen3-1.7B zero-shot rollouts → `llm_rollout_curve.png`, and (b) a **TRL `GRPOTrainer` proof-of-life run with PEFT LoRA** (section 10) → `grpo_training_curve.png`. The reward function used by `GRPOTrainer` is the same verifiable rubric, queried over HTTP against the live Space. A full fine-tune needs an A10G/A100 (~1–2 hours); the notebook runs `max_steps=2` on free T4 to demonstrate the wiring.
 
 ### Perfect agent baseline (sanity check — scripted correct responses)
 
@@ -227,10 +228,8 @@ A: The hackathon guide explicitly says prefer verifiable rewards. LLM judges are
 **Q: Why inherit from a conditional OpenEnv base class?**
 A: The openenv-core package only publishes 0.1.0 on PyPI as of April 2026. Fresh installs might pull a version without `openenv.core.environment.Environment`. We inherit when available and fall back to a shim when not, so the env works either way. The HTTP contract is the authority per the OpenEnv spec.
 
-**Q: Why a bandit training script instead of full GRPO?**
-A: Two reasons:
-1. Reproducibility — `train_simple_agent.py` runs on CPU in ~2 minutes. Judges can reproduce without a GPU.
-2. Evidence — the committed plots come from a real training loop, not a claim. Full LLM GRPO training happens in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) on Colab.
+**Q: Why a bandit training script alongside the GRPO notebook?**
+A: The bandit in `train_simple_agent.py` runs on CPU in ~2 minutes, produces real curves judges can reproduce without a GPU, and exercises the same verifiable reward signal the LLM sees. [train_workflow_arena.ipynb](train_workflow_arena.ipynb) section 10 wires the env into **TRL's `GRPOTrainer` with PEFT LoRA** — the minimum TRL/Unsloth-class training requirement. The notebook runs a 2-step proof-of-life on free T4; a full fine-tune wants an A10G/A100.
 
 **Q: Why single-worker uvicorn?**
 A: Sessions live in an in-process dict. Multiple workers = session loss on any cross-worker request. Production would use Redis; for a hackathon demo env, single-worker is the correct tradeoff.
