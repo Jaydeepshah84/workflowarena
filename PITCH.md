@@ -106,7 +106,7 @@
 - **5** workflows (easy → expert)
 - **30** total required actions
 - **100%** verifiable rewards (no LLM judges)
-- **80** episodes trained (bandit) + Colab GRPO rollouts (Qwen2.5-1.5B-Instruct)
+- **80** episodes trained (bandit) + Colab GRPO rollouts (Qwen2.5-0.5B-Instruct)
 - **2.3×** reward improvement on onboarding (0.267 → 0.617)
 - **1.9×** reward improvement on expenses (0.389 → 0.740)
 - **1.7×** reward improvement on customer support (0.389 → 0.680)

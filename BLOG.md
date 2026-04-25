@@ -99,7 +99,7 @@ We ran two training tracks:
 
 ![Random vs Trained](comparison_chart.png)
 
-**Track 2 — LLM training pipeline** (`train_workflow_arena.ipynb`, Qwen2.5-1.5B-Instruct on Colab free T4). Wires up TRL `GRPOTrainer` + PEFT/LoRA against the live Space's verifiable reward function — `max_steps=10`, `beta=0.0` (no reference model) for T4 memory budget. The full notebook demonstrates the GRPO pipeline end-to-end; a complete fine-tune is left as A10G/A100 work.
+**Track 2 — LLM training pipeline** (`train_workflow_arena.ipynb`, Qwen2.5-0.5B-Instruct on Colab free T4). Wires up TRL `GRPOTrainer` + PEFT/LoRA against the live Space's verifiable reward function — `max_steps=10`, `beta=0.0` (no reference model) for T4 memory budget. The full notebook demonstrates the GRPO pipeline end-to-end; a complete fine-tune is left as A10G/A100 work.
 
 The bandit agent learned to:
 1. Pick action templates that match the required workflow steps
@@ -114,7 +114,7 @@ The LLM agent (when trained with GRPO) goes further — it generates the paramet
 - **UI**: Gradio (live demo at the HF Space URL)
 - **Hosting**: HuggingFace Spaces (Docker)
 - **Training**: TRL `GRPOTrainer` with PEFT/LoRA (proof-of-life cell in the Colab notebook); a CPU-only bandit trainer (`train_simple_agent.py`) for reproducible reward curves
-- **Base Model**: Qwen2.5-1.5B-Instruct (runs on Colab free T4)
+- **Base Model**: Qwen2.5-0.5B-Instruct (runs on Colab free T4)
 
 ## Links
 

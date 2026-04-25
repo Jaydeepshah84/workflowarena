@@ -128,7 +128,7 @@ Current AI agents can't handle these because they can't orchestrate multiple app
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  AGENT (Qwen2.5-1.5B-Instruct + GRPO)                   │
+│  AGENT (Qwen2.5-0.5B-Instruct + GRPO)                   │
 │  Submits: {"calls": [{app, method, params, reasoning}]} │
 └──────────────────────┬───────────────────────────────────┘
                        │ HTTP/WebSocket
@@ -288,7 +288,7 @@ See the reward and comparison plots above. Here is the TD loss decreasing across
 
 ![Loss Curve](loss_curve.png)
 
-The LLM training pipeline in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) covers **both** (a) Qwen2.5-1.5B-Instruct zero-shot rollouts → `llm_rollout_curve.png`, and (b) a **TRL `GRPOTrainer` proof-of-life run with PEFT LoRA** (section 10) → `grpo_training_curve.png`. The reward function used by `GRPOTrainer` is the same verifiable rubric, queried over HTTP against the live Space. A full fine-tune needs an A10G/A100 (~1–2 hours); the notebook runs `max_steps=10` with `beta=0.0` (no reference model) on free T4 to demonstrate the wiring.
+The LLM training pipeline in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) covers **both** (a) Qwen2.5-0.5B-Instruct **zero-shot rollouts** across 3 workflows (section 9) and (b) a **TRL `GRPOTrainer` + PEFT LoRA training cell** (section 10) wired against the live HF Space's verifiable reward function. The reward function passes the agent's JSON to `/step`, parses the API state from the response, and returns a single float in `[0.01, 0.99]` — the same rubric the bandit used. A full fine-tune needs an A10G/A100 (~1–2 hours); the notebook runs `max_steps=10` with `beta=0.0` (no reference model) on free T4 as a **proof of pipeline wiring**, not a finished training run. The committed reward improvement evidence is the bandit's `reward_curve.png` / `loss_curve.png` / `comparison_chart.png` (1.7×–2.3× over baseline).
 
 ### Perfect agent baseline (sanity check — scripted correct responses)
 
@@ -454,7 +454,7 @@ workflowarena/
 - **UI**: Gradio 4
 - **Hosting**: HuggingFace Spaces (Docker)
 - **Training**: TRL `GRPOTrainer` + PEFT/LoRA (notebook) and a CPU-only bandit trainer (`train_simple_agent.py`) for reproducible reward curves
-- **Base Model**: Qwen2.5-1.5B-Instruct (Colab free T4 compatible)
+- **Base Model**: Qwen2.5-0.5B-Instruct (Colab free T4 compatible)
 - **Verifier**: composable rubric with 4 components, exception-safe dispatch, adversarially tested (max-attack 0.17 vs perfect-agent 0.99)
 
 ---
