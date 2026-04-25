@@ -14,11 +14,23 @@ tags:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Jaydeepshah84/workflowarena/blob/main/train_workflow_arena.ipynb)
 [![HF Space](https://img.shields.io/badge/🤗%20HF%20Space-Live-green)](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena)
 [![GitHub](https://img.shields.io/badge/GitHub-Code-black?logo=github)](https://github.com/Jaydeepshah84/workflowarena)
+[![Blog](https://img.shields.io/badge/📝%20Blog-Read-orange)](https://github.com/Jaydeepshah84/workflowarena/blob/main/BLOG.md)
 
 > **Train AI agents to orchestrate real enterprise workflows across Gmail, Slack, Jira, HRIS, CRM, Deploy, and Finance. Every reward is VERIFIED via actual API responses.**
 
 **Meta PyTorch OpenEnv Hackathon — Grand Finale Submission**
 **Theme 3.1 + Scaler AI Labs Sub-theme: Multi-App RL Environment for Enterprise Workflows**
+
+---
+
+## 📎 Submission URLs (for the hackathon Google Form)
+
+| Field | URL |
+|---|---|
+| **Hugging Face Space** | https://huggingface.co/spaces/jaydeepshah2025/workflow-arena |
+| **Colab Notebook** | https://colab.research.google.com/github/Jaydeepshah84/workflowarena/blob/main/train_workflow_arena.ipynb |
+| **Code repository** | https://github.com/Jaydeepshah84/workflowarena |
+| **Blog post** | https://github.com/Jaydeepshah84/workflowarena/blob/main/BLOG.md |
 
 ---
 
