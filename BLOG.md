@@ -84,7 +84,7 @@ We ran two training tracks:
 
 ![Random vs Trained](comparison_chart.png)
 
-**Track 2 — LLM rollout** (`train_workflow_arena.ipynb`, Qwen3-1.7B on Colab free T4). Produces `llm_rollout_curve.png` and the per-workflow reward bars.
+**Track 2 — LLM rollout** (`train_workflow_arena.ipynb`, Qwen2.5-1.5B-Instruct on Colab free T4). Produces `llm_rollout_curve.png` and the per-workflow reward bars.
 
 The bandit agent learned to:
 1. Pick action templates that match the required workflow steps
@@ -99,7 +99,7 @@ The LLM agent (when trained with GRPO) goes further — it generates the paramet
 - **UI**: Gradio (live demo at the HF Space URL)
 - **Hosting**: HuggingFace Spaces (Docker)
 - **Training**: TRL `GRPOTrainer` with PEFT/LoRA (proof-of-life cell in the Colab notebook); a CPU-only bandit trainer (`train_simple_agent.py`) for reproducible reward curves
-- **Base Model**: Qwen3-1.7B (runs on Colab free T4)
+- **Base Model**: Qwen2.5-1.5B-Instruct (runs on Colab free T4)
 
 ## Links
 
