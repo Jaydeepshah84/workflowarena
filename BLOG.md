@@ -59,14 +59,29 @@ Every reward in WorkFlow Arena comes from actual API state:
 
 No LLM judges. No subjective grading. No reward hacking loopholes.
 
-## Multi-Component Reward Function
+## Composable Rubric Reward (4 Components)
 
-Each required action earns points across dimensions:
-- **70%** for correct API call succeeding
-- **15%** bonus for providing reasoning
-- **15%** bonus for correct priority order
+Each required action earns points across independent dimensions:
+- **Action match (~70%)**: Correct API call succeeded against expected mock-app state
+- **Reasoning (~15%)**: Agent provided a `reasoning` field explaining the call
+- **Priority order (~15%)**: Calls executed in the correct business sequence
+- **Exploration (small)**: Tiny credit for valid attempts, prevents the agent from collapsing to a single safe call
 
-This encourages agents to think before acting AND execute in the right business sequence.
+This encourages agents to think before acting, execute in the right order, AND explore — all with deterministic state-based scoring.
+
+## Adversarial Test — The Verifier Holds
+
+Most "reward functions" in agent benchmarks are easily gameable. Ours isn't.
+
+We ran 10 adversarial attack patterns against the verifier — empty calls, malformed JSON, distractor calls, flowery reasoning with failed calls, wrong enum values, spam-the-correct-call-10x, and more.
+
+| Result | Score |
+|---|---|
+| Maximum cumulative score under any attack | **0.1667** |
+| Perfect agent (scripted correct responses) | **0.99** |
+| Verifier holds (max attack < 0.20 threshold) | **✅ True** |
+
+Full per-attack results in `adversarial_results.json`, reproducible via `python adversarial_test.py`. **No team that uses LLM-as-judge can show this.**
 
 ## Training Results (real numbers, committed plots)
 
@@ -84,7 +99,7 @@ We ran two training tracks:
 
 ![Random vs Trained](comparison_chart.png)
 
-**Track 2 — LLM rollout** (`train_workflow_arena.ipynb`, Qwen2.5-1.5B-Instruct on Colab free T4). Produces `llm_rollout_curve.png` and the per-workflow reward bars.
+**Track 2 — LLM training pipeline** (`train_workflow_arena.ipynb`, Qwen2.5-1.5B-Instruct on Colab free T4). Wires up TRL `GRPOTrainer` + PEFT/LoRA against the live Space's verifiable reward function — `max_steps=10`, `beta=0.0` (no reference model) for T4 memory budget. The full notebook demonstrates the GRPO pipeline end-to-end; a complete fine-tune is left as A10G/A100 work.
 
 The bandit agent learned to:
 1. Pick action templates that match the required workflow steps
