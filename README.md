@@ -16,10 +16,26 @@ tags:
 [![GitHub](https://img.shields.io/badge/GitHub-Code-black?logo=github)](https://github.com/Jaydeepshah84/workflowarena)
 [![Blog](https://img.shields.io/badge/📝%20Blog-Read-orange)](https://github.com/Jaydeepshah84/workflowarena/blob/main/BLOG.md)
 
-> **Train AI agents to orchestrate real enterprise workflows across Gmail, Slack, Jira, HRIS, CRM, Deploy, and Finance. Every reward is VERIFIED via actual API responses.**
+> **Train AI agents to orchestrate real enterprise workflows across Gmail, Slack, Jira, HRIS, CRM, Deploy, and Finance.**
+>
+> 🔒 **Every reward is VERIFIED by an actual API response — no LLM judges, no subjective grading.**
 
 **Meta PyTorch OpenEnv Hackathon — Grand Finale Submission**
 **Theme 3.1 + Scaler AI Labs Sub-theme: Multi-App RL Environment for Enterprise Workflows**
+
+---
+
+## 🧠 In one sentence
+
+We built a simulated enterprise environment where AI agents learn real multi-app workflows using **verifiable, rubric-based rewards** — and we proved the verifier holds under adversarial attack.
+
+## 🚀 Why this submission stands out
+
+- ✅ **Verifiable RL environment** for real enterprise workflows — no LLM judges, no subjective grading
+- ✅ **Composable rubric reward** (4 independent components) instead of monolithic scoring
+- ✅ **Adversarially tested** against reward hacking — max attack `0.1667` vs perfect agent `0.99`
+- ✅ **Real training improvement** — 1.7×–2.3× over random baseline across 3 workflows, plots committed
+- ✅ **Full TRL `GRPOTrainer` + PEFT/LoRA pipeline** wired to the live HF Space env
 
 ---
 
@@ -46,6 +62,11 @@ That's the environment working. Everything below is how and why.
 ---
 
 ## 📊 Proof It Trains (real run, committed plots)
+
+We demonstrate **two training tracks** so judges can verify the env actually teaches:
+
+- **Fast CPU baseline** — `train_simple_agent.py` (bandit, ~2 min, no GPU). Produces the committed plots below.
+- **Full RL pipeline** — `train_workflow_arena.ipynb` section 10 (TRL `GRPOTrainer` + PEFT/LoRA, Colab T4 proof-of-life).
 
 80-episode bandit training loop against the live environment produced these curves:
 
@@ -184,7 +205,16 @@ All apps enforce **real business rules**:
 
 ## 🎯 Reward Function — composable rubric, no LLM judges
 
+### 🧩 Quick view (the 30-second version)
+
+- **Action Match (70%)** — agent issued the right API call and it succeeded
+- **Reasoning (15%)** — agent provided a non-empty rationale on a matched call
+- **Priority Order (15%)** — actions completed in the correct workflow sequence
+- **Exploration (5% of per-action budget)** — small credit for valid-but-unmatched calls so the agent isn't punished for trying
+
 Each step reward is the sum of independent **rubric components** — the same composable pattern OpenEnv's `Transform` protocol encourages. Every component is an integer/string check traceable to a single function in [server/environment.py](server/environment.py).
+
+### 📐 Exact grader logic (for reviewers)
 
 | Rubric component (`server/environment.py`) | Weight | Exact grader logic |
 |---|--------|--------------------|
@@ -201,6 +231,8 @@ Per-step `info["reward_components"]` exposes the breakdown so trainers and obser
 ---
 
 ## 🛡️ Anti-Reward-Hacking — built in, then adversarially tested
+
+> 🛡️ **Key result: Max attack score = `0.1667`. Perfect agent = `0.99`. Reward is robust and non-exploitable.**
 
 The hackathon Self-Serve Guide §8 and FAQ §57 are explicit: *"Do not optimize a reward you have not tried to break yourself first."* We didn't. Then we did. Here's the result.
 
@@ -266,8 +298,8 @@ Confirms rewards are verifiable — a correct agent reliably hits ~0.95, proving
 
 These are the tradeoffs we made and why. Preempting the likely "why did you..." questions.
 
-**Q: Why is the reward function only 3 components? Isn't that simplistic?**
-A: Each component is **independently verifiable** — API success (bool), reasoning present (string check), priority order (integer comparison). Adding more components was possible but would introduce subjectivity. The hackathon explicitly prefers "crisp verification over tasks that only look good to a human." Simpler, more verifiable beats complex and fuzzy.
+**Q: Why is the reward function only 4 components? Isn't that simplistic?**
+A: Each component is **independently verifiable** — API success (bool), reasoning present (string check), priority order (integer comparison), exploration credit (small floor for valid-but-unmatched calls). Adding more components was possible but would introduce subjectivity. The hackathon explicitly prefers "crisp verification over tasks that only look good to a human." Simpler, more verifiable beats complex and fuzzy.
 
 **Q: Why no penalty for wrong actions?**
 A: Deliberate RL choice — penalties discourage exploration in sparse-reward settings. The agent gets 0 for wrong actions (no reward, no punishment). A trained agent still learns to avoid them because they don't advance progress. Penalties would collapse exploration too aggressively given the 30 required actions across 5 workflows.
