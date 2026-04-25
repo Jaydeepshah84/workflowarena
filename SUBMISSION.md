@@ -77,47 +77,53 @@ Every inference run produces:
 ### Storytelling (30%)
 **Tools:**
 - Live Gradio UI demo at HF Space root
-- 3-minute pitch script (`PITCH.md`)
-- Mini-blog with problem/solution/results (`BLOG.md`)
+- Mentor-round talking points reference (`PITCH.md`)
+- Mini-blog with problem / solution / results (`BLOG.md`)
+- README walkthrough with embedded plots (judges read it cold in 3-5 minutes)
 
 ### Showing Improvement in Rewards (20%)
-**Evidence:**
-- `train_workflow_arena.ipynb` produces reward curves
-- Before/after numbers: 0.15 → 0.72 (5× improvement)
-- Multiple reward components (total, completed, API success) track separately
+**Evidence (real numbers from `training_results.json`):**
+
+| Workflow | Random Baseline | Trained Bandit | Improvement |
+|----------|----------------:|---------------:|------------:|
+| Employee Onboarding | 0.267 | 0.617 | **2.3×** |
+| Expense Approval | 0.389 | 0.740 | **1.9×** |
+| Customer Support | 0.389 | 0.680 | **1.7×** |
+
+Plots committed: [reward_curve.png](reward_curve.png), [loss_curve.png](loss_curve.png), [comparison_chart.png](comparison_chart.png). Per-step `info["reward_components"]` exposes the rubric breakdown so trainers can monitor individual columns.
 
 ### Reward and Training Script (10%)
 **Pipeline:**
-- TRL GRPOTrainer
-- Unsloth for efficiency
-- vLLM (colocate mode)
-- Qwen3-1.7B base model
-- OpenEnv client integration via `generate_rollout_completions`
+- TRL `GRPOTrainer` with PEFT/LoRA, wired to the live HF Space as the reward function (notebook section 10 — proof-of-life run on Colab T4 with `max_steps=2`)
+- Local CPU bandit trainer (`train_simple_agent.py`) for reproducible reward curves
+- Composable rubric (`REWARD_RUBRIC` in `server/environment.py`): action_match, reasoning, priority_order, exploration
+- Adversarial test (`adversarial_test.py`): 10 attack patterns, max attack scores 0.1667 vs perfect-agent 0.99 → verifier holds
 
 ---
 
-## 🔄 Pre-Pitch Sanity Checks
+## 🔄 Pre-Submission + Pre-Mentor-Round Sanity Checks
 
-Before going on stage:
+Before each Mentor Round, and before the 5 PM submission cutoff on 2026-04-26:
 
-- [ ] HF Space is running (green "Running" badge)
+- [ ] HF Space stage = `RUNNING` (`curl https://huggingface.co/api/spaces/jaydeepshah2025/workflow-arena | grep stage`)
 - [ ] `curl https://jaydeepshah2025-workflow-arena.hf.space/health` returns `{"status":"healthy"}`
 - [ ] Gradio UI loads in browser at root URL
-- [ ] `baseline_test.py` runs and shows ~0.95 average score
-- [ ] Reward curve PNG exported from Colab notebook
-- [ ] Pitch practiced with Snigdha, timed under 3 minutes
-- [ ] Backup: local laptop can run `uvicorn server.app:app` if Wi-Fi fails
+- [ ] `python3 baseline_test.py` runs and shows ~0.95 average score across all 5 workflows
+- [ ] `python3 adversarial_test.py` shows verifier holds (max attack < 0.20)
+- [ ] All committed PNGs render in README on github.com (no broken images)
+- [ ] Colab badge in README launches `train_workflow_arena.ipynb` from `main`
+- [ ] Submission form fields match the URLs in section "📎 Submission URLs" above
 
 ---
 
-## 🎤 Pitch Day Demo Script (60 seconds live)
+## 🎯 Demo flow (use during mentor rounds, ~60 seconds)
 
 1. Open HF Space → Gradio UI loads instantly
-2. Select **"P0 Incident Response"** from dropdown
+2. Select **"P0 Incident Response"** from dropdown (the most impressive workflow)
 3. Click **"Sample API Calls"** → shows pre-filled JSON
 4. Click **"Execute Step"** → rewards appear, counters update
-5. Point at "API Calls: 3/4 successful" → verifiable ✅
-6. Show reward curve chart from Colab → improvement over time
+5. Point at "API Calls: 3/4 successful" + the per-component reward breakdown → verifiable, no LLM judge
+6. Switch tab to README on GitHub → show the embedded `reward_curve.png` and the random-vs-trained comparison table
 
 ---
 
@@ -132,27 +138,32 @@ uvicorn server.app:app --host 0.0.0.0 --port 7860
 
 ### Colab notebook errors?
 Fall back to showing:
-- `baseline_test.py` output (proves env works)
-- Pre-saved `reward_curve.png` (trained earlier)
-- Screenshots of trackio dashboard
+- `baseline_test.py` output (proves env works against the live Space)
+- Committed `reward_curve.png` + `comparison_chart.png` (training already happened, plots are in the repo)
+- `adversarial_results.json` (anti-reward-hacking evidence)
 
 ### Laptop dies?
-Pitch script is memorized from `PITCH.md`. Key numbers:
-- 7 apps, 5 workflows, 30 actions
-- 100% verifiable rewards
-- 5× reward improvement after training
+Mentor talking points are in `PITCH.md`. Key numbers:
+- 7 apps, 5 workflows, 30 required actions across difficulty tiers
+- 100% verifiable rewards (no LLM judge)
+- Trained-bandit improvement: 1.7×–2.3× over random across 3 workflows
+- Adversarial verifier: max-attack 0.17 vs perfect-agent 0.99
 
 ---
 
-## 🗓️ Final Timeline
+## 🗓️ Event Schedule (2026-04-25 → 2026-04-26)
 
-| Date | Task |
+| When | What |
 |------|------|
-| April 23 (today) | Finalize code, test everything |
-| April 24 | Run notebook, generate reward_curve.png, practice pitch |
-| April 25 AM | Travel to Bangalore |
-| April 25 PM | Check venue, test Wi-Fi with HF Space |
-| April 26 | Pitch day — stay cool, trust the demo |
+| Day 1, 2026-04-25 7:00 AM | Registration desk opens at Scaler Campus, Electronic City |
+| Day 1, 10:00 AM | Welcome |
+| Day 1, 11:00 AM | Hacking opens |
+| Day 1, **3:30–4:30 PM** | **Mentor Round 1** (classroom) |
+| Day 1, **8:00–10:00 PM** | **Mentor Round 2** (classroom) |
+| Day 2, 2026-04-26 **10:00 AM–12:00 PM** | **Mentor Round 3** (final, classroom) |
+| Day 2, **5:00 PM SHARP** | **Submission form closes — hard stop, no late entries** |
+| Day 2, 5:15 PM | Closing remarks |
+| 2026-05-02 | Results announced via YouTube Live |
 
 ---
 

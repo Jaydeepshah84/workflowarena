@@ -98,8 +98,8 @@ The LLM agent (when trained with GRPO) goes further — it generates the paramet
 - **Environment**: Python + FastAPI + Pydantic
 - **UI**: Gradio (live demo at the HF Space URL)
 - **Hosting**: HuggingFace Spaces (Docker)
-- **Training**: TRL GRPOTrainer + Unsloth + vLLM (colocate)
-- **Base Model**: Qwen3-1.7B (runs on Colab free tier)
+- **Training**: TRL `GRPOTrainer` with PEFT/LoRA (proof-of-life cell in the Colab notebook); a CPU-only bandit trainer (`train_simple_agent.py`) for reproducible reward curves
+- **Base Model**: Qwen3-1.7B (runs on Colab free T4)
 
 ## Links
 
@@ -120,7 +120,6 @@ Future extensions:
 
 - Meta PyTorch team for OpenEnv
 - Hugging Face team for TRL, Spaces, and the hackathon infrastructure
-- Unsloth team for efficient RL training
 - Scaler School of Technology for hosting the grand finale
 
 ---

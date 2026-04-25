@@ -1,7 +1,9 @@
-# WorkFlow Arena — 3-Minute Pitch Script
+# WorkFlow Arena — Talking Points (mentor rounds + Q&A)
 
 **Team**: Jaydeep Shah + Snigdha Aswal
 **Theme**: 3.1 + Scaler AI Labs (Multi-App Enterprise Workflow)
+
+> Originally drafted as a 3-minute stage script. Kept here as a tight talking-points reference for the three Mentor Rounds (Day 1 3:30–4:30 PM, 8–10 PM; Day 2 10 AM–12 PM). Submission is judged from artifacts; there is no live stage pitch.
 
 ---
 
@@ -133,7 +135,7 @@ A: Their brief asked for "complex workflows, business rule nuances, large enterp
 
 ---
 
-## 🎥 Demo Plan (60 seconds max on stage)
+## 🎥 Demo Plan (60 seconds during mentor rounds)
 
 1. **Open HF Space URL** — shows Gradio UI instantly (no loading)
 2. **Select "Employee Onboarding"** from dropdown → hit Reset
@@ -151,7 +153,7 @@ A: Their brief asked for "complex workflows, business rule nuances, large enterp
 | Environment Innovation | 40% | Verifiable rewards, 7 apps, 5 workflows, business rules |
 | Storytelling | 30% | This pitch script + Live Gradio demo |
 | Reward Improvement | 20% | Reward curve from trained notebook |
-| Pipeline | 10% | GRPO + Unsloth + TRL + OpenEnv |
+| Reward + Pipeline | 10% | Composable rubric (4 components) + adversarially tested + TRL `GRPOTrainer` with PEFT/LoRA + OpenEnv |
 
 ---
 

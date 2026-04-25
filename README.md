@@ -330,11 +330,11 @@ python train_simple_agent.py
 
 Produces `reward_curve.png`, `loss_curve.png`, `comparison_chart.png`, `training_results.json` from a real bandit training run against the live environment code.
 
-### Train with GRPO + Unsloth
+### Train with TRL `GRPOTrainer` + PEFT/LoRA
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Jaydeepshah84/workflowarena/blob/main/train_workflow_arena.ipynb)
 
-Or run locally:
+Section 10 of the notebook wires our live HF Space as the reward function for `trl.GRPOTrainer` with PEFT LoRA — a 2-step proof-of-life run on free Colab T4 (a full fine-tune wants A10G/A100). Or run locally:
 
 ```bash
 export API_BASE_URL="https://api.openai.com/v1"
@@ -388,7 +388,7 @@ workflowarena/
 ├── uv.lock                       Locked versions
 ├── README.md                     This file
 ├── BLOG.md                       Mini-blog for submission
-└── PITCH.md                      3-minute pitch script
+└── PITCH.md                      Talking points for mentor rounds
 ```
 
 ---
@@ -398,9 +398,9 @@ workflowarena/
 - **Environment**: Python 3.11 + FastAPI + Pydantic
 - **UI**: Gradio 4
 - **Hosting**: HuggingFace Spaces (Docker)
-- **Training**: TRL (GRPOTrainer) + Unsloth + vLLM (colocate)
-- **Base Model**: Qwen3-1.7B (Colab T4 compatible)
-- **Tracking**: trackio
+- **Training**: TRL `GRPOTrainer` + PEFT/LoRA (notebook) and a CPU-only bandit trainer (`train_simple_agent.py`) for reproducible reward curves
+- **Base Model**: Qwen3-1.7B (Colab free T4 compatible)
+- **Verifier**: composable rubric with 4 components, exception-safe dispatch, adversarially tested (max-attack 0.17 vs perfect-agent 0.99)
 
 ---
 
@@ -412,15 +412,15 @@ workflowarena/
 - 📓 **Training Notebook**: [Open in Colab](https://colab.research.google.com/github/Jaydeepshah84/workflowarena/blob/main/train_workflow_arena.ipynb)
 - 🧭 **Code Walkthrough** (5-min tour for reviewers): [CODE_WALKTHROUGH.md](CODE_WALKTHROUGH.md)
 - 📝 **Blog**: [BLOG.md](BLOG.md)
-- 🎤 **3-Minute Pitch**: [PITCH.md](PITCH.md)
+- 🎤 **Mentor-round talking points**: [PITCH.md](PITCH.md)
 - 🎬 **Demo Recording Script**: [DEMO_RECORDING_SCRIPT.md](DEMO_RECORDING_SCRIPT.md)
 
 **What to check:**
-1. **Innovation**: Verifiable API-based rewards — no LLM judges, no subjective grading
-2. **Real-world relevance**: 7 mock apps modeling actual enterprise software
-3. **Reward improvement**: See `train_workflow_arena.ipynb` for training curves
-4. **Pipeline**: GRPO + Unsloth + TRL + OpenEnv — all frontier tooling
-5. **Business rules**: Enums, policy limits, priority ordering all enforced
+1. **Innovation**: Verifiable API-based rewards — no LLM judges, composable rubric with 4 independent components, adversarially tested
+2. **Real-world relevance**: 7 mock apps modeling actual enterprise software with enforced business rules (enums, policy limits, priority ordering)
+3. **Reward improvement**: Real bandit training run committed as `reward_curve.png` + `comparison_chart.png` (1.7×–2.3× over random across 3 workflows). LLM zero-shot rollouts in `train_workflow_arena.ipynb` sections 7–9.
+4. **Training pipeline**: TRL `GRPOTrainer` + PEFT/LoRA wired to the live env (notebook section 10), local bandit for CPU reproducibility, OpenEnv-spec compliant
+5. **Anti-reward-hacking**: 10-attack adversarial test — max attack scores 0.17 vs perfect-agent 0.99 (`adversarial_test.py` + `adversarial_results.json`)
 
 ---
 
@@ -431,7 +431,6 @@ Built by **Jaydeep Shah** and **Snigdha Aswal** for the Meta PyTorch OpenEnv Hac
 Thanks to:
 - **Meta PyTorch team** for OpenEnv
 - **Hugging Face team** for TRL, Spaces, and hackathon infrastructure
-- **Unsloth team** for efficient RL training
 - **Scaler School of Technology** for hosting the grand finale
 
 ---
