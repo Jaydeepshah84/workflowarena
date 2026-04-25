@@ -288,7 +288,13 @@ See the reward and comparison plots above. Here is the TD loss decreasing across
 
 ![Loss Curve](loss_curve.png)
 
-The LLM training pipeline in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) covers **both** (a) Qwen2.5-0.5B-Instruct **zero-shot rollouts** across 3 workflows (section 9) and (b) a **TRL `GRPOTrainer` + PEFT LoRA training cell** (section 10) wired against the live HF Space's verifiable reward function. The reward function passes the agent's JSON to `/step`, parses the API state from the response, and returns a single float in `[0.01, 0.99]` — the same rubric the bandit used. A full fine-tune needs an A10G/A100 (~1–2 hours); the notebook runs `max_steps=10` with `beta=0.0` (no reference model) on free T4 as a **proof of pipeline wiring**, not a finished training run. The committed reward improvement evidence is the bandit's `reward_curve.png` / `loss_curve.png` / `comparison_chart.png` (1.7×–2.3× over baseline).
+### Zero-shot LLM rollouts (Qwen2.5-0.5B-Instruct on Colab T4)
+
+The notebook also runs the same env against an actual LLM agent (Qwen2.5-0.5B-Instruct) without any weight updates. This shows the env wired up correctly to a real LLM. The flat curve is **expected** — small zero-shot models can't generate the right JSON without training; what matters is that the verifiable reward function still ran 15 episodes against the live Space without crashing.
+
+![LLM Rollout Curve](llm_rollout_curve.png)
+
+The LLM training pipeline in [train_workflow_arena.ipynb](train_workflow_arena.ipynb) covers **both** (a) Qwen2.5-0.5B-Instruct **zero-shot rollouts** across 3 workflows (section 9, plot above) and (b) a **TRL `GRPOTrainer` + PEFT LoRA training cell** (section 10) wired against the live HF Space's verifiable reward function. The reward function passes the agent's JSON to `/step`, parses the API state from the response, and returns a single float in `[0.01, 0.99]` — the same rubric the bandit used. A full fine-tune needs an A10G/A100 (~1–2 hours); the notebook runs `max_steps=10` with `beta=0.0` (no reference model) on free T4 as a **proof of pipeline wiring**, not a finished training run. The committed reward improvement evidence is the bandit's `reward_curve.png` / `loss_curve.png` / `comparison_chart.png` (1.7×–2.3× over baseline).
 
 ### Perfect agent baseline (sanity check — scripted correct responses)
 
