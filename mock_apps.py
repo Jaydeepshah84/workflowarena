@@ -4,9 +4,7 @@ Simulates Gmail, Slack, Jira, HRIS, CRM, and deployment systems.
 Every API call has a verifiable response — this is what makes rewards OBJECTIVE.
 """
 
-from typing import Dict, List, Optional, Any
-import uuid
-from datetime import datetime
+from typing import Dict, List
 
 
 class EnterpriseApps:

@@ -1,6 +1,5 @@
 """HTTP client for WorkFlow Arena."""
 
-from typing import Optional
 import httpx
 from models import WorkFlowAction, WorkFlowObservation, WorkFlowState, StepResult
 
