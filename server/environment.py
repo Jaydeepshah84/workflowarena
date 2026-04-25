@@ -181,7 +181,7 @@ class WorkFlowEnvironment(_OpenEnvBase):
         self.step_count += 1
 
         api_calls = self._parse_calls(message)
-        step_reward, feedback, execution_results = self._execute_and_grade(api_calls)
+        step_reward, feedback, execution_results, component_totals = self._execute_and_grade(api_calls)
 
         # Boundary clamp — keep the reward strictly in the open interval (0, 1),
         # per hackathon organizer requirement. Intermediate values unchanged.
@@ -224,6 +224,7 @@ class WorkFlowEnvironment(_OpenEnvBase):
                 "cumulative_score": round(self.total_reward, 4),
                 "api_calls_made": self.api_calls_made,
                 "api_calls_successful": self.api_calls_successful,
+                "reward_components": {k: round(v, 4) for k, v in component_totals.items()},
                 "app_state": self.apps.get_state_snapshot() if self.apps else {},
             },
         }
@@ -281,50 +282,62 @@ class WorkFlowEnvironment(_OpenEnvBase):
             return []
 
     def _execute_api_call(self, call: APICall) -> Dict:
-        """Execute a single API call and return the result."""
+        """Execute a single API call and return a result dict.
+
+        Wrapped in try/except so malformed inputs (missing required kwargs, wrong
+        types) become a graceful {"success": False, "error": ...} response
+        instead of raising — keeps the verifier robust under adversarial input
+        and prevents an RL trainer's reward function from blowing up.
+        """
         app_name = call.app.lower()
         method = call.method.lower()
+        params = call.params if isinstance(call.params, dict) else {}
 
-        # Route to the right app
-        if app_name == "gmail":
-            if method == "create_account":
-                return self.apps.gmail_create_account(**call.params)
-            elif method in ("send_email", "send"):
-                return self.apps.gmail_send_email(**call.params)
-        elif app_name == "slack":
-            if method == "add_user":
-                return self.apps.slack_add_user(**call.params)
-            elif method in ("send_message", "message", "post"):
-                return self.apps.slack_send_message(**call.params)
-        elif app_name == "jira":
-            if method == "create_ticket":
-                return self.apps.jira_create_ticket(**call.params)
-            elif method == "update_ticket":
-                return self.apps.jira_update_ticket(**call.params)
-            elif method == "close_sprint":
-                return self.apps.jira_close_sprint(**call.params)
-        elif app_name == "hris":
-            if method == "create_employee":
-                return self.apps.hris_create_employee(**call.params)
-            elif method == "assign_equipment":
-                return self.apps.hris_assign_equipment(**call.params)
-        elif app_name == "crm":
-            if method == "update_customer":
-                return self.apps.crm_update_customer(**call.params)
-            elif method == "create_support_ticket":
-                return self.apps.crm_create_support_ticket(**call.params)
-        elif app_name == "deploy":
-            if method in ("service", "deploy_service"):
-                return self.apps.deploy_service(**call.params)
-            elif method == "rollback":
-                return self.apps.deploy_rollback(**call.params)
-            elif method == "update_status_page":
-                return self.apps.deploy_update_status_page(**call.params)
-        elif app_name == "finance":
-            if method == "submit_expense":
-                return self.apps.finance_submit_expense(**call.params)
-            elif method == "approve_expense":
-                return self.apps.finance_approve_expense(**call.params)
+        try:
+            if app_name == "gmail":
+                if method == "create_account":
+                    return self.apps.gmail_create_account(**params)
+                elif method in ("send_email", "send"):
+                    return self.apps.gmail_send_email(**params)
+            elif app_name == "slack":
+                if method == "add_user":
+                    return self.apps.slack_add_user(**params)
+                elif method in ("send_message", "message", "post"):
+                    return self.apps.slack_send_message(**params)
+            elif app_name == "jira":
+                if method == "create_ticket":
+                    return self.apps.jira_create_ticket(**params)
+                elif method == "update_ticket":
+                    return self.apps.jira_update_ticket(**params)
+                elif method == "close_sprint":
+                    return self.apps.jira_close_sprint(**params)
+            elif app_name == "hris":
+                if method == "create_employee":
+                    return self.apps.hris_create_employee(**params)
+                elif method == "assign_equipment":
+                    return self.apps.hris_assign_equipment(**params)
+            elif app_name == "crm":
+                if method == "update_customer":
+                    return self.apps.crm_update_customer(**params)
+                elif method == "create_support_ticket":
+                    return self.apps.crm_create_support_ticket(**params)
+            elif app_name == "deploy":
+                if method in ("service", "deploy_service"):
+                    return self.apps.deploy_service(**params)
+                elif method == "rollback":
+                    return self.apps.deploy_rollback(**params)
+                elif method == "update_status_page":
+                    return self.apps.deploy_update_status_page(**params)
+            elif app_name == "finance":
+                if method == "submit_expense":
+                    return self.apps.finance_submit_expense(**params)
+                elif method == "approve_expense":
+                    return self.apps.finance_approve_expense(**params)
+        except TypeError as e:
+            # Missing/extra keyword args — treat as a failed call, not a crash.
+            return {"success": False, "error": f"bad_params: {e}"}
+        except Exception as e:
+            return {"success": False, "error": f"{type(e).__name__}: {e}"}
 
         return {"success": False, "error": f"Unknown app.method: {app_name}.{method}"}
 
@@ -379,22 +392,30 @@ class WorkFlowEnvironment(_OpenEnvBase):
                 return action["id"]
         return None
 
-    def _execute_and_grade(self, api_calls: List[APICall]) -> Tuple[float, str, List[Dict]]:
+    def _execute_and_grade(
+        self, api_calls: List[APICall]
+    ) -> Tuple[float, str, List[Dict], Dict[str, float]]:
         """Score a batch of API calls by running each rubric component per call.
 
         Reward = sum over calls of (sum over rubric components of contribution).
         Side effects: updates self.completed_actions, self.api_calls_made,
         self.api_calls_successful.
+
+        Returns (step_reward, feedback, execution_results, component_totals) where
+        component_totals is a per-rubric-component breakdown for this step — used
+        by judges/observers to monitor individual reward signals (the hackathon
+        guide explicitly recommends "individual reward function columns").
         """
         required_total = len(self.workflow["required_actions"])
         points_per_action = 1.0 / required_total
         step_reward = 0.0
         feedback_parts = []
         execution_results = []
+        component_totals: Dict[str, float] = {tag: 0.0 for _, tag in REWARD_RUBRIC}
 
         if not api_calls:
             feedback_parts.append("  No API calls submitted.")
-            return step_reward, "\n".join(feedback_parts), execution_results
+            return step_reward, "\n".join(feedback_parts), execution_results, component_totals
 
         for call in api_calls:
             self.api_calls_made += 1
@@ -424,8 +445,10 @@ class WorkFlowEnvironment(_OpenEnvBase):
 
             # Apply the composable rubric: each component scores one axis.
             call_reward = 0.0
-            for component_fn, _tag in REWARD_RUBRIC:
-                call_reward += component_fn(ctx)
+            for component_fn, tag in REWARD_RUBRIC:
+                contrib = component_fn(ctx)
+                component_totals[tag] += contrib
+                call_reward += contrib
             step_reward += call_reward
 
             if matched_id:
@@ -446,7 +469,7 @@ class WorkFlowEnvironment(_OpenEnvBase):
             f"\n  Progress: {len(self.completed_actions)}/{required_total} required actions. "
             f"API: {self.api_calls_successful}/{self.api_calls_made} successful."
         )
-        return step_reward, "\n".join(feedback_parts), execution_results
+        return step_reward, "\n".join(feedback_parts), execution_results, component_totals
 
     def _format_initial_observation(self) -> str:
         wf = self.workflow

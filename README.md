@@ -184,6 +184,47 @@ Each step reward is the sum of independent **rubric components** — the same co
 
 The full rubric is declared as a list (`REWARD_RUBRIC`) so adding or swapping a component is one line of code — composable, not monolithic. Rewards clamped strictly to `(0.01, 0.99)`.
 
+Per-step `info["reward_components"]` exposes the breakdown so trainers and observers can monitor individual rubric columns instead of only watching total reward — directly addressing the hackathon guide's "monitor individual reward function columns" recommendation.
+
+---
+
+## 🛡️ Anti-Reward-Hacking — built in, then adversarially tested
+
+The hackathon Self-Serve Guide §8 and FAQ §57 are explicit: *"Do not optimize a reward you have not tried to break yourself first."* We didn't. Then we did. Here's the result.
+
+### Built-in safeguards
+
+| Safeguard | Where | What it prevents |
+|---|---|---|
+| **No LLM judge** | `server/environment.py` rubric is pure code | Removes the most common LLM-RL reward-hack vector entirely |
+| **`completed_actions` is a `set`** | `_match_required_action` | Spamming the same correct call 10× still only counts once |
+| **Reasoning bonus gated on `matched_id`** | `_rubric_reasoning` | Flowery prose alone earns 0 — must also produce a correct API state change |
+| **Priority bonus gated on integer position** | `_rubric_priority_order` | Can't reorder claimed completions to fake correctness |
+| **Param matching with explicit equality / `_contains`** | `_match_required_action` | Action match needs the right params, not just the right method name |
+| **Enum + policy enforcement in mock apps** | `mock_apps.py` | Wrong department / over-policy-limit calls are rejected by the API layer before any reward is computed |
+| **Strict reward clamp `(0.01, 0.99)`** | `step()` | No saturation gaming, no zero-reward divide-by-zero, never inflates past the cap |
+| **`_execute_api_call` is exception-safe** | try/except in routing | Malformed JSON / wrong types / missing kwargs return `{"success": False}` instead of crashing the trainer |
+| **Deterministic verifier** | No randomness in scoring | Identical input → identical reward → reproducible audits |
+
+### Adversarial test results
+
+We threw 10 attack patterns at the easiest workflow (`employee_onboarding`, perfect-agent score 0.99). An attack scoring above **0.20** would indicate a real verifier weakness. Run yourself: `python3 adversarial_test.py`.
+
+| Attack | Cumulative reward | Verdict |
+|---|---:|---|
+| Empty calls list `{"calls": []}` | 0.0100 | ✅ floor only |
+| Empty JSON `{}` | 0.0100 | ✅ floor only |
+| Malformed JSON | 0.0100 | ✅ floor only |
+| Plain text, no JSON | 0.0100 | ✅ floor only |
+| Spam one correct call 10× | **0.1667** | ✅ best-attack — still 6× below baseline |
+| All-distractor calls | 0.0167 | ✅ floor only |
+| Unknown app names (`twitter`, `linkedin`) | 0.0100 | ✅ floor only |
+| Flowery reasoning + failing API calls | 0.0100 | ✅ reasoning bonus gated, no leakage |
+| Correct methods, empty params | 0.0100 | ✅ exception caught, no crash |
+| Wrong enum values (`dept=INVALID_DEPT`) | 0.0100 | ✅ enum enforcement holds |
+
+**Max attack: 0.1667. Perfect agent: 0.99. Verifier holds.** Raw output is in [adversarial_results.json](adversarial_results.json).
+
 ---
 
 ## 📊 TD Loss Curve + Full Training Details

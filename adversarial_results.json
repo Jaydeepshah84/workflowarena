@@ -1,0 +1,147 @@
+{
+  "task": "employee_onboarding",
+  "perfect_reference": 0.99,
+  "max_seen": 0.1667,
+  "results": [
+    {
+      "label": "empty_calls_dict",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 0,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "empty_json_object",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 0,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "malformed_json",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 0,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "plain_text_no_json",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 0,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "spam_one_correct_call_10x",
+      "reward": 0.1667,
+      "cumulative": 0.1667,
+      "completed": 1,
+      "api_made": 10,
+      "api_success": 1,
+      "components": {
+        "action_match": 0.1167,
+        "reasoning": 0.025,
+        "priority_order": 0.025,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "all_distractors",
+      "reward": 0.0167,
+      "cumulative": 0.0167,
+      "completed": 0,
+      "api_made": 3,
+      "api_success": 2,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0167
+      }
+    },
+    {
+      "label": "unknown_apps",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 2,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "flowery_reasoning_failed_calls",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 2,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "correct_methods_empty_params",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 3,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    },
+    {
+      "label": "wrong_enum_values",
+      "reward": 0.01,
+      "cumulative": 0.01,
+      "completed": 0,
+      "api_made": 1,
+      "api_success": 0,
+      "components": {
+        "action_match": 0.0,
+        "reasoning": 0.0,
+        "priority_order": 0.0,
+        "exploration": 0.0
+      }
+    }
+  ]
+}
