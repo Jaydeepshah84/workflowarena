@@ -25,6 +25,17 @@ tags:
 
 ---
 
+## 🛡️ The headline result
+
+> ### Adversarially tested. **Max-attack score: `0.1667`. Perfect agent: `0.99`.**
+> ### **The verifier holds.**
+>
+> 10 reward-hacking attack patterns thrown at the env (empty calls, JSON spam, distractor-only, malformed input, repeated correct calls, wrong enums, …). Every single one capped well below the 0.20 weakness threshold. Raw results in [adversarial_results.json](adversarial_results.json), reproduce with `python3 adversarial_test.py`.
+>
+> **Most LLM-RL submissions don't even attempt this. We did, and the verifier passed.**
+
+---
+
 ## 🧠 In one sentence
 
 We built a simulated enterprise environment where AI agents learn real multi-app workflows using **verifiable, rubric-based rewards** — and we proved the verifier holds under adversarial attack.
