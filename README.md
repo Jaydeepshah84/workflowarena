@@ -468,8 +468,7 @@ workflowarena/
 ├── requirements.txt              Dependencies
 ├── uv.lock                       Locked versions
 ├── README.md                     This file
-├── BLOG.md                       Mini-blog for submission
-└── PITCH.md                      Talking points for mentor rounds
+└── BLOG.md                       Mini-blog for submission
 ```
 
 ---
@@ -493,8 +492,6 @@ workflowarena/
 - 📓 **Training Notebook**: [Open in Colab](https://colab.research.google.com/github/Jaydeepshah84/workflowarena/blob/main/train_workflow_arena.ipynb)
 - 🧭 **Code Walkthrough** (5-min tour for reviewers): [CODE_WALKTHROUGH.md](CODE_WALKTHROUGH.md)
 - 📝 **Blog**: [BLOG.md](BLOG.md)
-- 🎤 **Mentor-round talking points**: [PITCH.md](PITCH.md)
-- 🎬 **Demo Recording Script**: [DEMO_RECORDING_SCRIPT.md](DEMO_RECORDING_SCRIPT.md)
 
 **What to check:**
 1. **Innovation**: Verifiable API-based rewards — no LLM judges, composable rubric with 4 independent components, adversarially tested
