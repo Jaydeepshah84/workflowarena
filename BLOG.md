@@ -170,15 +170,15 @@ We ran two training tracks against the same verifiable reward function:
 
 ### Real reward improvement curve
 
-![Reward Curve](https://raw.githubusercontent.com/Jaydeepshah84/workflowarena/main/reward_curve.png)
+![Reward Curve](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena/resolve/main/reward_curve.png)
 
 ### Loss curve (TD loss going down)
 
-![Loss Curve](https://raw.githubusercontent.com/Jaydeepshah84/workflowarena/main/loss_curve.png)
+![Loss Curve](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena/resolve/main/loss_curve.png)
 
 ### Random vs Trained comparison
 
-![Random vs Trained](https://raw.githubusercontent.com/Jaydeepshah84/workflowarena/main/comparison_chart.png)
+![Random vs Trained](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena/resolve/main/comparison_chart.png)
 
 The bandit agent learned to:
 1. Pick action templates that match the required workflow steps
@@ -191,13 +191,13 @@ The bandit agent learned to:
 
 #### Zero-shot LLM rollouts (env + LLM wiring proof)
 
-![LLM Rollout Curve](https://raw.githubusercontent.com/Jaydeepshah84/workflowarena/main/llm_rollout_curve.png)
+![LLM Rollout Curve](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena/resolve/main/llm_rollout_curve.png)
 
 The flat curve is **expected** — small zero-shot models can't generate the right JSON without training. What matters is that the verifiable reward function ran 15 episodes against the live HF Space without crashing, proving the env-LLM integration is solid.
 
 #### GRPO pipeline status
 
-![GRPO Training Curve](https://raw.githubusercontent.com/Jaydeepshah84/workflowarena/main/grpo_training_curve.png)
+![GRPO Training Curve](https://huggingface.co/spaces/jaydeepshah2025/workflow-arena/resolve/main/grpo_training_curve.png)
 
 The notebook demonstrates the GRPO pipeline end-to-end; a complete fine-tune requires A10G/A100 (~$5–10 in HF credits, ~1–2 hours). On free Colab T4, the trainer instantiates correctly and the reward function returns valid scores — full training convergence is left as paid-GPU work, with the bandit results above carrying the actual reward improvement claim.
 
