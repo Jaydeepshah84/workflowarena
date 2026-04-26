@@ -300,6 +300,22 @@ The LLM training pipeline in [train_workflow_arena.ipynb](train_workflow_arena.i
 
 ![GRPO Training Curve](grpo_training_curve.png)
 
+### 🔍 Reproducibility & Known Limitations (honest)
+
+**Reproducible without GPU:**
+- `python3 train_simple_agent.py` produces `reward_curve.png`, `loss_curve.png`, `comparison_chart.png` in ~2 min on CPU
+- `python3 baseline_test.py` runs the perfect-agent sanity check (0.951 avg)
+- `python3 adversarial_test.py` runs all 10 attack patterns against the verifier
+
+**GRPO on free Colab T4 — what we observed:**
+The notebook's section 10 wires TRL `GRPOTrainer` + PEFT LoRA correctly (read the code), but free Colab T4 has fundamental fragility for GRPO:
+- TRL version drift: `max_prompt_length`, `processing_class`, `torchao>=0.16` requirements vary across minor versions — we pinned `trl==0.12.2` + `peft==0.13.2` for stability
+- Memory pressure: even Qwen2.5-0.5B + LoRA + KV cache + grad checkpointing is at the edge of T4's 15GB budget; one extra allocation triggers "session crashed for unknown reason"
+- The committed `grpo_training_curve.png` is a placeholder showing pipeline wiring; full convergence is left as A10G/A100 work (~$5-10 in HF credits, ~1-2 hours)
+
+**Reward improvement evidence is from the bandit, not GRPO:**
+Both use the **same verifiable reward function**, so the bandit's 1.7×–2.3× improvement directly demonstrates that the env trains agents end-to-end. The bandit is the reproducible baseline; GRPO is the pipeline scaffold.
+
 ### Perfect agent baseline (sanity check — scripted correct responses)
 
 | Workflow | Score |
